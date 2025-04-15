@@ -4,8 +4,8 @@ import time
 import re
 
 placeholderstr = "Please input your command"
-user_name = "Gild"
-user_image = "https://www.w3schools.com/howto/img_avatar.png"
+user_name = "On-Boarding Mentor"
+user_image = "https://www.flaticon.com/free-sticker/job-seeker_9263242?term=hr&page=1&position=72&origin=search&related_id=9263242"
 
 def stream_data(stream_str):
     for word in stream_str.split(" "):
@@ -62,12 +62,28 @@ def main():
                     st_c_chat.chat_message(msg["role"]).markdown((msg["content"]))
 
     def generate_response(prompt):
-        pattern = r'\b(i(\'?m| am| feel| think i(\'?)?m)?\s*(so\s+)?(stupid|ugly|dumb|idiot|worthless|loser|useless))\b'
-        if re.search(pattern, prompt, re.IGNORECASE):
-            return "Yes, you are!"
-        else:
-            return f"You say: {prompt}."
+        # Normalize prompt for easier matching (lowercase, strip whitespace)
+        prompt = prompt.strip().lower()
         
+        # Patterns for negative self-statements
+        negative_pattern = r'\b(i(\'?m| am| feel| think i(\'?)?m)?\s*(so\s+)?(stupid|ugly|dumb|idiot|worthless|loser|useless))\b'
+        
+        # Patterns for onboarding-related queries
+        help_pattern = r'\b(how|what|help|start|use|do|guide|onboard)\b'
+        question_pattern = r'\b(why|when|where|who|what)\b'
+        
+        # Handle negative self-statements
+        if re.search(negative_pattern, prompt, re.IGNORECASE):
+            return "I'm sorry you feel that way! You're here to learn and grow, and I'm here to help you every step of the way. Want to explore how this app can support you?"
+        
+        # Handle onboarding-related questions or requests
+        elif re.search(help_pattern, prompt, re.IGNORECASE) or re.search(question_pattern, prompt, re.IGNORECASE):
+            return "I'd be happy to help! Could you share a bit more about what you're curious about? For example, are you wondering how to set up your profile or explore app features?"
+        
+        # Default response for generic input
+        else:
+            return "Thanks for sharing! I'm here to guide you through onboarding. Try asking something like 'How do I start?' or tell me what you're thinking about!"
+
     # Chat function section (timing included inside function)
     def chat(prompt: str):
         st_c_chat.chat_message("user",avatar=user_image).write(prompt)
