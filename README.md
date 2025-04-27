@@ -2,7 +2,6 @@
 
 A simple Streamlit app that shows how to build a chatbot using OpenAI's GPT-3.5.
 
-[Open in Streamlit](https://on-boarding-mentor.streamlit.app/)
 
 ### How to run it on your own machine
 
@@ -17,3 +16,7 @@ A simple Streamlit app that shows how to build a chatbot using OpenAI's GPT-3.5.
    ```
    $ streamlit run Streamlit_app.py
    ```
+
+### live demo 
+
+Streamlit: https://on-boarding-mentor-chatbot.streamlit.app/ 
