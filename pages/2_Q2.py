@@ -1,96 +1,83 @@
 import streamlit as st
 import pandas as pd
-import pydeck as pdk
+import altair as alt
 from urllib.error import URLError
+import numpy as np
+from gensim.models import Word2Vec
+from gensim.utils import simple_preprocess
+from gensim.parsing.preprocessing import remove_stopwords
+import pandas as pd
 
 st.set_page_config(page_title="Question 2", page_icon="🌍")
 
 st.markdown("# Question 2")
 st.sidebar.header("Question 2")
 st.write(
-    """Follow the SKIP-GRAM example, modify 2 the params, 
+    """Follow the SKIP-GRAM example, modify the 2 params, 
     e.g. windows size, vector size, 
-    and using the new 10 sentences model to try a new sentence."""
+    and using the new 17 sentences model to try a new sentence."""
 )
 
+# Sample sentences
+sentences = [
+    "A special subset W of a vector space V where applying the operator T to any vector in W keeps the result in W.",
+    "An operator T where the inner product <Tu, v> equals <u, Tv> for all vectors u and v, meaning it behaves symmetrically.",
+    "A subset W where applying the operator T to any vector in W produces a vector that’s still in W.",
+    "An operator T that works the same whether you apply it or its adjoint T^* first.",
+    "An operator T where, for any nonzero vector x, the inner product <Tx, x> is positive, like a 'stretching' effect.",
+    "An operator T where, for any vector x, the inner product <Tx, x> is zero or positive, never negative.",
+    "A number λ where applying the operator T to some nonzero vector x just scales x by λ, i.e., T(x) = λx.",
+    "A nonzero vector x that, when the operator T is applied, only gets scaled by some number λ, i.e., T(x) = λx.",
+    "A group of vectors that are all perpendicular to each other and each has a length of 1.",
+    "A way to break down a linear transformation T into three parts: two rotation-like matrices (U and V) and a diagonal matrix (Σ) with scaling factors called singular values.",
+    "Nonnegative numbers in the SVD that show how much a transformation stretches or shrinks vectors.",
+    "A square matrix U that preserves lengths and angles, satisfying U^*U = UU^* = I (like a rotation or reflection).",
+    "A real square matrix U where U^T U = I, meaning it preserves lengths and angles (a special case of unitary for real numbers).",
+    "A way to write a matrix A as A = WP, where W is a rotation-like matrix and P is a matrix that stretches but doesn’t rotate.",
+    "A technique to simplify data by fitting it to an ellipsoid and keeping only the directions with the most spread.",
+    "A direction w that captures the most variation when data is projected onto it.",
+    "A measure of how spread out the data is along a principal component, with PCA focusing on the directions with the most spread."
+]
 
-@st.cache_data
-def from_data_file(filename):
-    url = (
-        "http://raw.githubusercontent.com/streamlit/"
-        "example-data/master/hello/v1/%s" % filename
+# Preprocess the sentences (remove stopwords)
+tokenized_sentences = [simple_preprocess(remove_stopwords(sentence)) for sentence in sentences]
+
+# Define the three sets of parameters
+param_sets = [
+    {"vector_size": 100, "window": 5, "min_count": 1, "workers": 4, "sg": 1, "name": "Model 1 (vector_size=100, window=5)"},
+    {"vector_size": 200, "window": 5, "min_count": 1, "workers": 4, "sg": 1, "name": "Model 2 (vector_size=200, window=5)"},
+    {"vector_size": 100, "window": 10, "min_count": 1, "workers": 4, "sg": 1, "name": "Model 3 (vector_size=100, window=10)"}
+]
+
+# Train models and get similar words
+similar_words_list = []
+for params in param_sets:
+    model = Word2Vec(
+        tokenized_sentences,
+        vector_size=params["vector_size"],
+        window=params["window"],
+        min_count=params["min_count"],
+        workers=params["workers"],
+        sg=params["sg"]
     )
-    return pd.read_json(url)
+    # Get most similar words to 'pca'
+    try:
+        similar_words = model.wv.most_similar('pca', topn=5)  # Top 5 similar words
+        similar_words_list.append([(word, round(score, 3)) for word, score in similar_words])
+    except KeyError:
+        similar_words_list.append([("N/A", 0.0)] * 5)  # Handle case where 'pca' is not in vocabulary
 
+# Streamlit UI
+st.title("Word2Vec Model Comparison: Similarity Rankings for 'pca'")
 
-try:
-    ALL_LAYERS = {
-        "Bike Rentals": pdk.Layer(
-            "HexagonLayer",
-            data=from_data_file("bike_rental_stats.json"),
-            get_position=["lon", "lat"],
-            radius=200,
-            elevation_scale=4,
-            elevation_range=[0, 1000],
-            extruded=True,
-        ),
-        "Bart Stop Exits": pdk.Layer(
-            "ScatterplotLayer",
-            data=from_data_file("bart_stop_stats.json"),
-            get_position=["lon", "lat"],
-            get_color=[200, 30, 0, 160],
-            get_radius="[exits]",
-            radius_scale=0.05,
-        ),
-        "Bart Stop Names": pdk.Layer(
-            "TextLayer",
-            data=from_data_file("bart_stop_stats.json"),
-            get_position=["lon", "lat"],
-            get_text="name",
-            get_color=[0, 0, 0, 200],
-            get_size=15,
-            get_alignment_baseline="'bottom'",
-        ),
-        "Outbound Flow": pdk.Layer(
-            "ArcLayer",
-            data=from_data_file("bart_path_stats.json"),
-            get_source_position=["lon", "lat"],
-            get_target_position=["lon2", "lat2"],
-            get_source_color=[200, 30, 0, 160],
-            get_target_color=[200, 30, 0, 160],
-            auto_highlight=True,
-            width_scale=0.0001,
-            get_width="outbound",
-            width_min_pixels=3,
-            width_max_pixels=30,
-        ),
-    }
-    st.sidebar.markdown("### Map Layers")
-    selected_layers = [
-        layer
-        for layer_name, layer in ALL_LAYERS.items()
-        if st.sidebar.checkbox(layer_name, True)
-    ]
-    if selected_layers:
-        st.pydeck_chart(
-            pdk.Deck(
-                map_style="mapbox://styles/mapbox/light-v9",
-                initial_view_state={
-                    "latitude": 37.76,
-                    "longitude": -122.4,
-                    "zoom": 11,
-                    "pitch": 50,
-                },
-                layers=selected_layers,
-            )
-        )
-    else:
-        st.error("Please choose at least one layer above.")
-except URLError as e:
-    st.error(
-        """
-        **This demo requires internet access.**
-        Connection error: %s
-    """
-        % e.reason
-    )
+# Display similar words in a side-by-side table
+st.header("Similarity Rankings Comparison")
+col1, col2, col3 = st.columns(3)
+columns = [col1, col2, col3]
+
+for i, (col, params, similar_words) in enumerate(zip(columns, param_sets, similar_words_list)):
+    with col:
+        st.subheader(params["name"])
+        df = pd.DataFrame(similar_words, columns=["Word", "Similarity Score"])
+        st.table(df)
+
