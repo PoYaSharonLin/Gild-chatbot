@@ -2,14 +2,14 @@ import streamlit as st
 import time
 import numpy as np
 
-st.set_page_config(page_title=" Question 1 ", page_icon= "📊")
+st.set_page_config(page_title="Question 1", page_icon= "📊")
 
-st.markdown(" Question 1 ")
-st.sidebar.header(" Question 1 ")
+st.markdown("# Question 1")
+st.sidebar.header("Question 1")
 st.write(
-    """
-•Question 1-1: Select any 10 new sentences and apply it to step 1.1. Provide 2D and 3D views for 10 new sentences. 
-•Question 1-2: What is the difference from Word2Vec and SVD. Describe your finding from the result. """
+    """Question 1-1: Select any 10 new sentences and apply it to step 1.1. 
+    Provide 2D and 3D views for 10 new sentences. Question 1-2: What is the difference from Word2Vec and SVD. 
+    Describe your finding from the result."""
 )
 
 progress_bar = st.sidebar.progress(0)

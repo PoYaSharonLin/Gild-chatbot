@@ -3,14 +3,14 @@ import pandas as pd
 import pydeck as pdk
 from urllib.error import URLError
 
-st.set_page_config(page_title="Mapping Demo", page_icon="🌍")
+st.set_page_config(page_title="Question 2", page_icon="🌍")
 
-st.markdown("# Mapping Demo")
-st.sidebar.header("Mapping Demo")
+st.markdown("# Question 2")
+st.sidebar.header("Question 2")
 st.write(
-    """This demo shows how to use
-[`st.pydeck_chart`](https://docs.streamlit.io/develop/api-reference/charts/st.pydeck_chart)
-to display geospatial data."""
+    """Follow the SKIP-GRAM example, modify 2 the params, 
+    e.g. windows size, vector size, 
+    and using the new 10 sentences model to try a new sentence."""
 )
 
 

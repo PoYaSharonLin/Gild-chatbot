@@ -3,13 +3,14 @@ import pandas as pd
 import altair as alt
 from urllib.error import URLError
 
-st.set_page_config(page_title="DataFrame Demo", page_icon="📊")
+st.set_page_config(page_title="Question 3", page_icon="📊")
 
-st.markdown("# DataFrame Demo")
-st.sidebar.header("DataFrame Demo")
+st.markdown("# Question 3")
+st.sidebar.header("Question 3")
 st.write(
-    """This demo shows how to use `st.write` to visualize Pandas DataFrames.
-(Data courtesy of the [UN Data Explorer](http://data.un.org/Explorer.aspx).)"""
+    """Follow the CBOW example , 
+    modify 2 the params, e.g. windows size, 
+    vector size, using the new 10 sentences model to try a new sentence."""
 )
 
 
