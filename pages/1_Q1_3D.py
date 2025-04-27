@@ -1,5 +1,4 @@
 import streamlit as st
-import time
 import numpy as np
 from gensim.models import Word2Vec
 from gensim.utils import simple_preprocess
@@ -7,13 +6,11 @@ from sklearn.decomposition import PCA
 import plotly.graph_objects as go
 import plotly.express as px
 
-st.set_page_config(page_title="Question 1-3D", page_icon= "📊")
+st.set_page_config(page_title="Question 1-3D", page_icon="📊")
 
 st.markdown("# Question 1-3D")
 st.sidebar.header("Question 1-3D")
-st.write(
-    """3D view of the 17 new sentences."""
-)
+st.write("""3D view of the 17 new sentences.""")
 
 # Sample sentences
 sentences = [
@@ -49,20 +46,23 @@ word_vectors = np.array([model.wv[word] for word in model.wv.index_to_key])
 pca = PCA(n_components=3)
 reduced_vectors = pca.fit_transform(word_vectors)
 
-# Assign a color to each word based on its sentence
+# Assign a color to each sentence
 num_sentences = len(sentences)
 colors = px.colors.qualitative.Plotly
 color_map = {i: colors[i % len(colors)] for i in range(num_sentences)}
 
 # Assign colors to words based on their sentence
 word_colors = []
+word_to_sentence = {}
 for word in model.wv.index_to_key:
     for i, sentence in enumerate(tokenized_sentences):
         if word in sentence:
             word_colors.append(color_map[i])
+            word_to_sentence[word] = i
             break
     else:
         word_colors.append('gray')
+        word_to_sentence[word] = -1
 
 # Create 3D scatter plot for words
 scatter = go.Scatter3d(
@@ -72,9 +72,9 @@ scatter = go.Scatter3d(
     mode='markers+text',
     text=model.wv.index_to_key,
     textposition='top center',
-    marker=dict(color=word_colors, size=2),
-    customdata=word_colors,
-    hovertemplate="Word: %{text}<br>Color: %{customdata}"
+    marker=dict(color=word_colors, size=4),
+    customdata=[f"Sentence {word_to_sentence[word] + 1}" if word_to_sentence[word] >= 0 else "None" for word in model.wv.index_to_key],
+    hovertemplate="Word: %{text}<br>Sentence: %{customdata}"
 )
 
 # Streamlit UI
@@ -85,6 +85,44 @@ st.sidebar.header("Select Sentences to Display")
 display_array = []
 for i in range(num_sentences):
     display_array.append(st.sidebar.checkbox(f"Sentence {i+1}", value=True))
+
+# Add user input field
+user_input = st.text_input("Enter a sentence:", key="user_sentence_input_3d")
+
+# Process user input if provided
+user_scatter = None
+user_line_trace = None
+if user_input:
+    tokenized_user_input = simple_preprocess(user_input)
+    user_words = [word for word in tokenized_user_input if word in model.wv]
+    if user_words:
+        user_vectors = np.array([model.wv[word] for word in user_words])
+        user_points = pca.transform(user_vectors)
+        # Create scatter for user input
+        user_scatter = go.Scatter3d(
+            x=user_points[:, 0],
+            y=user_points[:, 1],
+            z=user_points[:, 2],
+            mode='markers+text',
+            text=user_words,
+            textposition='bottom center',
+            marker=dict(color='red', size=6, symbol='x'),
+            name='User Input',
+            hovertemplate="Word: %{text}<br>From: User Input"
+        )
+        # Create line trace for user input
+        user_line_trace = go.Scatter3d(
+            x=user_points[:, 0],
+            y=user_points[:, 1],
+            z=user_points[:, 2],
+            mode='lines',
+            line=dict(color='red', width=2, dash='solid'),
+            showlegend=True,
+            name='User Sentence',
+            hoverinfo='skip'
+        )
+    else:
+        st.warning("None of the words in your sentence are in the model's vocabulary.")
 
 # Create 3D line traces for selected sentences
 line_traces = []
@@ -104,16 +142,15 @@ for i, sentence in enumerate(tokenized_sentences):
         line_traces.append(line_trace)
 
 # Create the figure
-fig = go.Figure(data=[scatter] + line_traces)
+fig = go.Figure(data=[scatter] + line_traces + ([user_scatter, user_line_trace] if user_scatter and user_line_trace else []))
 
 # Update layout for 3D plot
 fig.update_layout(
     scene=dict(
-        xaxis_title="X",
-        yaxis_title="Y",
-        zaxis_title="Z"
+        xaxis_title="PCA Component 1",
+        yaxis_title="PCA Component 2",
+        zaxis_title="PCA Component 3"
     ),
-    title="3D Visualization of Word Embeddings",
     width=1000,
     height=1000,
     showlegend=True
@@ -121,3 +158,5 @@ fig.update_layout(
 
 # Display the plot in Streamlit
 st.plotly_chart(fig, use_container_width=True)
+
+st.button("Re-run")
