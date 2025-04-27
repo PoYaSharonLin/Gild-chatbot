@@ -14,7 +14,7 @@ def stream_data(stream_str):
 
 def main():
     st.set_page_config(
-        page_title='K-Assistant - The Residemy Agent',
+        page_title='on-boarding mentor',
         layout='wide',
         initial_sidebar_state='auto',
         menu_items={
