@@ -2,3 +2,10 @@ streamlit
 openai
 autogen-agentchat
 autogen-ext[openai]
+gensim==4.3.2
+plotly
+pandas
+numpy==1.23.5
+scipy==1.10.1
+nltk
+scikit-learn
